@@ -1,0 +1,40 @@
+{
+  "name": "@jayfate/gen-css-identifier",
+  "version": "1.0.0",
+  "description": "Library for generation short and unique identifiers: class name or id",
+  "main": "index.js",
+  "scripts": {},
+  "devDependencies": {
+    "coverage-badges": "1.0.7",
+    "eslint": "8.5.0",
+    "eslint-plugin-unicorn": "39.0.0",
+    "jest": "27.4.5"
+  },
+  "keywords": [
+    "obfuscate",
+    "generator",
+    "minify",
+    "identifiers",
+    "css",
+    "hash",
+    "short",
+    "shorten",
+    "name",
+    "class",
+    "classname",
+    "name",
+    "unique",
+    "id",
+    "short class name",
+    "shorten class name",
+    "short class unique name",
+    "unique id",
+    "unique dom id"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jayfate/gen-css-identifier.git"
+  },
+  "author": "jayfate",
+  "license": "ISC"
+}
