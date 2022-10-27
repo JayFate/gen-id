@@ -1,59 +1,60 @@
-'use strict';
+type Alphabets = string | string[]
+type Option = { prefix?: string, notStartsWith?: string[] }
 
-module.exports = class Generator {
+/**
+ * TODO notStartsWith 支持正则
+ */
+export default class Generator {
+  _prefix: string
+  _not_starts_with: Set<string>
+  _link_list: Link_list
+  _curr: string[] = []
+  _pos = 0
+  _except: Set<string> = new Set()
+  _cache: Record<string, string | undefined> = {}
   /**
    *
    * @param {[string || string[]]} alphabet - ['a', 'b', 'c', 'd'] || 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
    * @param {{ [prefix]: string; [notStartsWith]: string[]; }} prefix - something prefix for indentifier, notStartsWith - identifier can't starts with this symbols from alphabet
    */
-  constructor(alphabet, { prefix, notStartsWith } = {}) {
-    if (!alphabet) {
-      alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    }
+  constructor(alphabet?: Alphabets, option?: Option) {
+    alphabet = alphabet || 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    option = option || {}
     if (typeof alphabet === 'string') {
       alphabet = alphabet.split('');
     }
 
-    this._prefix = prefix ?? '';
+    option.prefix = option.prefix || ''
+    option.notStartsWith = option.notStartsWith || []
 
-    if (typeof notStartsWith === 'string') {
-      notStartsWith = notStartsWith.split('');
-    }
-
-    this._not_starts_with = new Set(notStartsWith ?? []);
-
-    this._link_list = new Link_list(alphabet.map(el => el+''));
+    this._prefix = option.prefix;
+    this._not_starts_with = new Set(option.notStartsWith);
+    this._link_list = new Link_list(alphabet);
 
     if (this._not_starts_with.size) {
       this._add_decorator_for_link_list();
     }
-
-    this._curr = [];
-    this._pos = 0;
-
-    this._except = new Set();
-    this._cache = {};
   }
 
-  except(except) {
+  except(except: string[]) {
     this._except = new Set(except);
     return this;
   }
 
   next() {
     if (this._except.size) {
-      let result;
+      let result: string;
       do {
         result = this._next();
       } while (this._except.has(result));
-      return this._prefix+result;
+      return this._prefix + result;
     } else {
       return this._prefix + this._next();
     }
   }
 
 
-  getFor(key) {
+  getFor(key: string) {
     const result = this._cache[key];
     if (result) {
       return result;
@@ -66,7 +67,7 @@ module.exports = class Generator {
 
     const value = this._curr[this._pos];
     if (link_list.has_next(value)) {
-      this._curr[this._pos] = link_list.next(value);
+      this._curr[this._pos] = link_list.next(value)!;
       return this._to_str();
     } else if (!link_list.has_next(value) && this._curr[this._pos - 1]) { // if current letter is last in alphabet, but you have another digit
       const pos = this._find_pos();
@@ -77,10 +78,10 @@ module.exports = class Generator {
       }
       this._curr.forEach((_, i) => {
         if (i <= pos) { return; }
-        this._curr[i] = link_list.get_head();
+        this._curr[i] = link_list.get_head()!;
       });
 
-      this._curr[pos] = link_list.next(this._curr[pos]);
+      this._curr[pos] = link_list.next(this._curr[pos])!;
       this._pos = this._curr.length - 1;
       return this._to_str();
     } else {
@@ -92,7 +93,7 @@ module.exports = class Generator {
 
   _add_letter() {
     const link_list = this._link_list;
-    const head_el = link_list.get_head();
+    const head_el = link_list.get_head()!;
     this._curr.unshift(head_el);
     this._curr.forEach((el, i) => {
       if (i === 0) {
@@ -138,7 +139,7 @@ module.exports = class Generator {
         let temp = el;
         do {
           const value = me._link_list.get_next(temp);
-          if (value === null) {
+          if (value === undefined) {
             return false;
           }
           temp = value;
@@ -155,7 +156,7 @@ module.exports = class Generator {
         let value = el;
         do {
           // eslint-disable-next-line callback-return
-          value = next(value);
+          value = next(value)!;
         } while (me._not_starts_with.has(value));
         return value;
       } else {
@@ -171,28 +172,30 @@ module.exports = class Generator {
 
 
 class Link_list {
-  constructor(list) {
+  _hash: Record<string, string | undefined>
+  _head_str: string | undefined
+  constructor(list: string[]) {
     this._hash = {};
-    list.forEach((el, i) => {
-      this._hash[el] = list[i+1] || null;
+    list.forEach((str, i) => {
+      this._hash[str] = list[i + 1];
     });
-    this._head_el = list[0];
+    this._head_str = list[0];
   }
 
   get_head() {
-    return this._head_el;
+    return this._head_str;
   }
 
-  get_next(el) {
-    return this._hash[el];
+  get_next(str: string) {
+    return this._hash[str];
   }
 
-  has_next(el) {
-    return Boolean(this._hash[el]);
+  has_next(str: string) {
+    return Boolean(this._hash[str]);
   }
 
-  next(el) {
-    return this._hash[el];
+  next(str: string) {
+    return this._hash[str];
   }
 }
 
